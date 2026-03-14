@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "QA Training Platform"
+version = "1.0.0"
+id = "artifacts/qa-platform"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 18542
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/qa-platform run dev"
+
+[services.env]
+PORT = "18542"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/qa-platform", "run", "build"]
+publicDir = "artifacts/qa-platform/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

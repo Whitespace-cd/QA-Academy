@@ -1,0 +1,28 @@
+packages:
+  "framer-motion": "For page transitions and interactive component animations"
+  "lucide-react": "For beautiful, consistent iconography across the dashboard"
+  "@monaco-editor/react": "Required for the code editor in automation script exercises"
+  "react-hook-form": "For robust form state management in bug reports and test cases"
+  "@hookform/resolvers": "For integrating Zod validation with react-hook-form"
+  "zod": "For frontend form schema validation before API submission"
+  "clsx": "For conditional tailwind class joining"
+  "tailwind-merge": "For conflict-free tailwind class merging"
+  "date-fns": "For formatting timestamps in activity feeds and tables"
+  "react-hot-toast": "For elegant toast notifications on success/error states"
+  "recharts": "For rendering statistics and progress charts"
+
+images:
+  - path: "artifacts/qa-platform/public/images/hero-bg.png"
+    description: "Abstract dark mode tech background with deep indigo and cyan glowing geometric mesh, subtle code syntax elements floating in the background, professional and sleek"
+    aspect_ratio: "16:9"
+  - path: "artifacts/qa-platform/public/images/auth-bg.png"
+    description: "Dark, moody abstract background with soft glowing neon purple and blue lines, representing data streams and quality assurance"
+    aspect_ratio: "16:9"
+  - path: "artifacts/qa-platform/public/images/course-placeholder.png"
+    description: "Abstract 3D illustration of a glowing checkmark and magnifying glass on a dark pedestal, representing software testing"
+    aspect_ratio: "16:9"
+
+notes:
+  - Assuming the `@workspace/api-client-react` package correctly exports all generated hooks and types.
+  - The API baseUrl is `/api`.
+  - Authentication uses a JWT token stored in localStorage as `qa_token`.

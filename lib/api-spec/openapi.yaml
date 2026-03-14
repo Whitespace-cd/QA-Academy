@@ -1,22 +1,40 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: QA Training Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: courses
+    description: Course management
+  - name: exercises
+    description: Exercise management
+  - name: submissions
+    description: Exercise submissions
+  - name: bugReports
+    description: Bug reporting
+  - name: testCases
+    description: Test case management
+  - name: leaderboard
+    description: Leaderboard and gamification
+  - name: certificates
+    description: Certificate management
+  - name: demoApps
+    description: Demo applications for practice
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +42,642 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update user profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}/progress:
+    get:
+      operationId: getUserProgress
+      tags: [users]
+      summary: Get user learning progress
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProgress"
+
+  /courses:
+    get:
+      operationId: getCourses
+      tags: [courses]
+      summary: List all courses
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+    post:
+      operationId: createCourse
+      tags: [courses]
+      summary: Create a new course (instructor/admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCourseRequest"
+      responses:
+        "201":
+          description: Course created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Course"
+
+  /courses/{id}:
+    get:
+      operationId: getCourse
+      tags: [courses]
+      summary: Get course details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CourseDetail"
+
+  /courses/{id}/enroll:
+    post:
+      operationId: enrollCourse
+      tags: [courses]
+      summary: Enroll in a course
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Enrolled successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enrollment"
+
+  /courses/{courseId}/modules:
+    get:
+      operationId: getCourseModules
+      tags: [courses]
+      summary: Get modules for a course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Module"
+
+  /modules/{moduleId}/lessons:
+    get:
+      operationId: getModuleLessons
+      tags: [courses]
+      summary: Get lessons for a module
+      parameters:
+        - name: moduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of lessons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lesson"
+
+  /lessons/{id}:
+    get:
+      operationId: getLesson
+      tags: [courses]
+      summary: Get lesson details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lesson details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LessonDetail"
+
+  /exercises:
+    get:
+      operationId: getExercises
+      tags: [exercises]
+      summary: List exercises
+      parameters:
+        - name: lessonId
+          in: query
+          schema:
+            type: integer
+        - name: type
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of exercises
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Exercise"
+
+  /exercises/{id}:
+    get:
+      operationId: getExercise
+      tags: [exercises]
+      summary: Get exercise details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Exercise details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExerciseDetail"
+
+  /submissions:
+    post:
+      operationId: createSubmission
+      tags: [submissions]
+      summary: Submit an exercise
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubmissionRequest"
+      responses:
+        "201":
+          description: Submission evaluated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResult"
+
+  /submissions/user/{userId}:
+    get:
+      operationId: getUserSubmissions
+      tags: [submissions]
+      summary: Get submissions for a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Submission"
+
+  /bug-reports:
+    get:
+      operationId: getBugReports
+      tags: [bugReports]
+      summary: List bug reports
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: demoAppId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of bug reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BugReport"
+    post:
+      operationId: createBugReport
+      tags: [bugReports]
+      summary: Submit a bug report
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBugReportRequest"
+      responses:
+        "201":
+          description: Bug report submitted and evaluated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BugReportResult"
+
+  /bug-reports/{id}:
+    get:
+      operationId: getBugReport
+      tags: [bugReports]
+      summary: Get bug report details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bug report details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BugReport"
+
+  /test-cases:
+    get:
+      operationId: getTestCases
+      tags: [testCases]
+      summary: List test cases
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: exerciseId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of test cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TestCase"
+    post:
+      operationId: createTestCase
+      tags: [testCases]
+      summary: Submit a test case
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTestCaseRequest"
+      responses:
+        "201":
+          description: Test case submitted and evaluated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TestCaseResult"
+
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [leaderboard]
+      summary: Get global leaderboard
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /badges/user/{userId}:
+    get:
+      operationId: getUserBadges
+      tags: [leaderboard]
+      summary: Get badges for a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User badges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+
+  /certificates/user/{userId}:
+    get:
+      operationId: getUserCertificates
+      tags: [certificates]
+      summary: Get certificates for a user
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User certificates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Certificate"
+
+  /demo-apps:
+    get:
+      operationId: getDemoApps
+      tags: [demoApps]
+      summary: List demo applications
+      responses:
+        "200":
+          description: List of demo apps
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DemoApp"
+
+  /demo-apps/{id}:
+    get:
+      operationId: getDemoApp
+      tags: [demoApps]
+      summary: Get demo app details with known bugs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Demo app details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoAppDetail"
+
+  /instructor/courses:
+    get:
+      operationId: getInstructorCourses
+      tags: [courses]
+      summary: Get courses created by instructor
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Instructor courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Course"
+
+  /instructor/students:
+    get:
+      operationId: getInstructorStudents
+      tags: [users]
+      summary: Get students enrolled in instructor courses
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Student list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentSummary"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [users]
+      summary: Get platform statistics
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Admin statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +687,862 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+        role:
+          type: string
+          enum: [student, instructor]
+          default: student
+        learningPath:
+          type: string
+          enum: [manual-testing, automation-testing, api-testing, full-stack-qa]
+      required:
+        - email
+        - password
+        - name
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [student, instructor, admin]
+        learningPath:
+          type: string
+          nullable: true
+        avatarUrl:
+          type: string
+          nullable: true
+        totalScore:
+          type: integer
+        level:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - email
+        - name
+        - role
+        - totalScore
+        - level
+        - createdAt
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        learningPath:
+          type: string
+        avatarUrl:
+          type: string
+
+    UserProgress:
+      type: object
+      properties:
+        userId:
+          type: integer
+        enrolledCourses:
+          type: integer
+        completedCourses:
+          type: integer
+        completedLessons:
+          type: integer
+        totalLessons:
+          type: integer
+        totalScore:
+          type: integer
+        submissionsCount:
+          type: integer
+        bugReportsCount:
+          type: integer
+        testCasesCount:
+          type: integer
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+      required:
+        - userId
+        - enrolledCourses
+        - completedCourses
+        - completedLessons
+        - totalLessons
+        - totalScore
+        - submissionsCount
+        - bugReportsCount
+        - testCasesCount
+        - recentActivity
+
+    ActivityItem:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        score:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - type
+        - description
+        - createdAt
+
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [foundations, manual-testing, automation-testing, api-testing, performance-testing, mobile-testing, cicd-testing]
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimatedHours:
+          type: integer
+        modulesCount:
+          type: integer
+        enrolledCount:
+          type: integer
+        rating:
+          type: number
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        instructorId:
+          type: integer
+        instructorName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - category
+        - difficulty
+        - estimatedHours
+        - modulesCount
+        - enrolledCount
+        - instructorId
+        - instructorName
+        - createdAt
+
+    CourseDetail:
+      allOf:
+        - $ref: "#/components/schemas/Course"
+        - type: object
+          properties:
+            modules:
+              type: array
+              items:
+                $ref: "#/components/schemas/Module"
+            isEnrolled:
+              type: boolean
+          required:
+            - modules
+            - isEnrolled
+
+    CreateCourseRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+          enum: [foundations, manual-testing, automation-testing, api-testing, performance-testing, mobile-testing, cicd-testing]
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimatedHours:
+          type: integer
+        imageUrl:
+          type: string
+      required:
+        - title
+        - description
+        - category
+        - difficulty
+        - estimatedHours
+
+    Enrollment:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        courseId:
+          type: integer
+        enrolledAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        progress:
+          type: number
+      required:
+        - id
+        - userId
+        - courseId
+        - enrolledAt
+        - progress
+
+    Module:
+      type: object
+      properties:
+        id:
+          type: integer
+        courseId:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        orderIndex:
+          type: integer
+        lessonsCount:
+          type: integer
+      required:
+        - id
+        - courseId
+        - title
+        - description
+        - orderIndex
+        - lessonsCount
+
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: integer
+        moduleId:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [concept, example, practice, challenge]
+        orderIndex:
+          type: integer
+        estimatedMinutes:
+          type: integer
+        isCompleted:
+          type: boolean
+      required:
+        - id
+        - moduleId
+        - title
+        - type
+        - orderIndex
+        - estimatedMinutes
+        - isCompleted
+
+    LessonDetail:
+      allOf:
+        - $ref: "#/components/schemas/Lesson"
+        - type: object
+          properties:
+            content:
+              type: string
+            exercises:
+              type: array
+              items:
+                $ref: "#/components/schemas/Exercise"
+          required:
+            - content
+            - exercises
+
+    Exercise:
+      type: object
+      properties:
+        id:
+          type: integer
+        lessonId:
+          type: integer
+        title:
+          type: string
+        type:
+          type: string
+          enum: [write-test-case, report-bug, write-automation, test-api, create-test-plan, quiz]
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        points:
+          type: integer
+        description:
+          type: string
+      required:
+        - id
+        - lessonId
+        - title
+        - type
+        - difficulty
+        - points
+        - description
+
+    ExerciseDetail:
+      allOf:
+        - $ref: "#/components/schemas/Exercise"
+        - type: object
+          properties:
+            instructions:
+              type: string
+            template:
+              type: string
+              nullable: true
+            hints:
+              type: array
+              items:
+                type: string
+            demoAppId:
+              type: integer
+              nullable: true
+          required:
+            - instructions
+            - hints
+
+    CreateSubmissionRequest:
+      type: object
+      properties:
+        exerciseId:
+          type: integer
+        content:
+          type: string
+        language:
+          type: string
+          nullable: true
+      required:
+        - exerciseId
+        - content
+
+    Submission:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        exerciseId:
+          type: integer
+        exerciseTitle:
+          type: string
+        content:
+          type: string
+        score:
+          type: integer
+        maxScore:
+          type: integer
+        feedback:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [pending, evaluated, passed, failed]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - exerciseId
+        - exerciseTitle
+        - content
+        - score
+        - maxScore
+        - feedback
+        - suggestions
+        - status
+        - createdAt
+
+    SubmissionResult:
+      allOf:
+        - $ref: "#/components/schemas/Submission"
+        - type: object
+          properties:
+            pointsEarned:
+              type: integer
+            badgeEarned:
+              $ref: "#/components/schemas/Badge"
+              nullable: true
+          required:
+            - pointsEarned
+
+    CreateBugReportRequest:
+      type: object
+      properties:
+        demoAppId:
+          type: integer
+        exerciseId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+        stepsToReproduce:
+          type: string
+        expectedResult:
+          type: string
+        actualResult:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        environment:
+          type: string
+          nullable: true
+        screenshotUrl:
+          type: string
+          nullable: true
+      required:
+        - demoAppId
+        - title
+        - description
+        - stepsToReproduce
+        - expectedResult
+        - actualResult
+        - severity
+
+    BugReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        demoAppId:
+          type: integer
+        demoAppName:
+          type: string
+        exerciseId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+        stepsToReproduce:
+          type: string
+        expectedResult:
+          type: string
+        actualResult:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        status:
+          type: string
+          enum: [open, in-progress, resolved, wont-fix]
+        score:
+          type: integer
+          nullable: true
+        environment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - userName
+        - demoAppId
+        - demoAppName
+        - title
+        - description
+        - stepsToReproduce
+        - expectedResult
+        - actualResult
+        - severity
+        - status
+        - createdAt
+
+    BugReportResult:
+      type: object
+      properties:
+        bugReport:
+          $ref: "#/components/schemas/BugReport"
+        score:
+          type: integer
+        feedback:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+      required:
+        - bugReport
+        - score
+        - feedback
+        - suggestions
+
+    CreateTestCaseRequest:
+      type: object
+      properties:
+        exerciseId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+        preconditions:
+          type: string
+        testSteps:
+          type: string
+        expectedResult:
+          type: string
+        testType:
+          type: string
+          enum: [functional, regression, smoke, sanity, integration, performance]
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+      required:
+        - title
+        - description
+        - preconditions
+        - testSteps
+        - expectedResult
+        - testType
+        - priority
+
+    TestCase:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        exerciseId:
+          type: integer
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+        preconditions:
+          type: string
+        testSteps:
+          type: string
+        expectedResult:
+          type: string
+        testType:
+          type: string
+          enum: [functional, regression, smoke, sanity, integration, performance]
+        priority:
+          type: string
+          enum: [critical, high, medium, low]
+        score:
+          type: integer
+          nullable: true
+        feedback:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - userName
+        - title
+        - description
+        - preconditions
+        - testSteps
+        - expectedResult
+        - testType
+        - priority
+        - createdAt
+
+    TestCaseResult:
+      type: object
+      properties:
+        testCase:
+          $ref: "#/components/schemas/TestCase"
+        score:
+          type: integer
+        feedback:
+          type: string
+        suggestions:
+          type: array
+          items:
+            type: string
+      required:
+        - testCase
+        - score
+        - feedback
+        - suggestions
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        totalScore:
+          type: integer
+        level:
+          type: integer
+        badgesCount:
+          type: integer
+        completedCourses:
+          type: integer
+      required:
+        - rank
+        - userId
+        - name
+        - totalScore
+        - level
+        - badgesCount
+        - completedCourses
+
+    Badge:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        earnedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - name
+        - description
+        - icon
+        - color
+
+    Certificate:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        courseId:
+          type: integer
+        courseTitle:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        certificateUrl:
+          type: string
+      required:
+        - id
+        - userId
+        - courseId
+        - courseTitle
+        - issuedAt
+        - certificateUrl
+
+    DemoApp:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [ecommerce, banking, hr-management, buggy-demo]
+        url:
+          type: string
+        bugsCount:
+          type: integer
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+      required:
+        - id
+        - name
+        - description
+        - type
+        - url
+        - bugsCount
+        - difficulty
+
+    DemoAppDetail:
+      allOf:
+        - $ref: "#/components/schemas/DemoApp"
+        - type: object
+          properties:
+            knownBugs:
+              type: array
+              items:
+                $ref: "#/components/schemas/KnownBug"
+            testingGuide:
+              type: string
+          required:
+            - knownBugs
+            - testingGuide
+
+    KnownBug:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        severity:
+          type: string
+          enum: [critical, high, medium, low]
+        hint:
+          type: string
+      required:
+        - id
+        - title
+        - category
+        - severity
+        - hint
+
+    StudentSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        enrolledCourses:
+          type: integer
+        completedCourses:
+          type: integer
+        totalScore:
+          type: integer
+        lastActive:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - name
+        - email
+        - enrolledCourses
+        - completedCourses
+        - totalScore
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalStudents:
+          type: integer
+        totalInstructors:
+          type: integer
+        totalCourses:
+          type: integer
+        totalEnrollments:
+          type: integer
+        totalSubmissions:
+          type: integer
+        totalBugReports:
+          type: integer
+        totalTestCases:
+          type: integer
+        activeToday:
+          type: integer
+      required:
+        - totalUsers
+        - totalStudents
+        - totalInstructors
+        - totalCourses
+        - totalEnrollments
+        - totalSubmissions
+        - totalBugReports
+        - totalTestCases
+        - activeToday
