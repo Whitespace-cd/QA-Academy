@@ -14,7 +14,7 @@ export default function CourseDetail() {
   const { data: course, isLoading, refetch } = useGetCourse(courseId);
   const enrollMutation = useEnrollCourse({
     mutation: {
-      onSuccess: () => {
+      onSuccess: () => {const firstLessonId = course.modules?.[0]?.id || 1;
         toast.success('Successfully enrolled!');
         refetch();
       },
@@ -27,9 +27,7 @@ export default function CourseDetail() {
 
   const handleAction = () => {
     if (course.isEnrolled) {
-      // Find first module/lesson logic could go here, for now just route to a dummy lesson or module
-      const firstLessonId = course.modules?.[0]?.id || 1; // Simplification
-      setLocation(`/lessons/${firstLessonId}`);
+      setLocation(`/courses/${courseId}/learn`);
     } else {
       enrollMutation.mutate({ id: courseId });
     }
@@ -110,7 +108,7 @@ export default function CourseDetail() {
                     </div>
                   </div>
                   {course.isEnrolled && (
-                    <Link href={`/lessons/${module.id}`}>
+                    <Link href={`/modules/${module.id}/lessons`}>
                       <Button variant="outline" size="sm">Start</Button>
                     </Link>
                   )}
