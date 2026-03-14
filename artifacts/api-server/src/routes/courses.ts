@@ -103,11 +103,11 @@ router.get("/:id", async (req, res) => {
 
     const modules = await db.select().from(modulesTable).where(eq(modulesTable.courseId, id)).orderBy(modulesTable.orderIndex);
 
-    const modulesWithCounts = await Promise.all(modules.map(async (mod) => {
-      const [lessonsCount] = await db.select({ count: count() }).from(lessonsTable).where(eq(lessonsTable.moduleId, mod.id));
-      return { ...mod, lessonsCount: lessonsCount.count };
-    }));
-
+const modulesWithCounts = await Promise.all(modules.map(async (mod) => {
+  const [lessonsCount] = await db.select({ count: count() }).from(lessonsTable).where(eq(lessonsTable.moduleId, mod.id));
+  const firstLessons = await db.select({ id: lessonsTable.id }).from(lessonsTable).where(eq(lessonsTable.moduleId, mod.id)).orderBy(lessonsTable.orderIndex).limit(1);
+  return { ...mod, lessonsCount: lessonsCount.count, firstLessonId: firstLessons[0]?.id || null };
+}));
     const [enrolledCount] = await db.select({ count: count() }).from(enrollmentsTable).where(eq(enrollmentsTable.courseId, id));
 
     res.json({

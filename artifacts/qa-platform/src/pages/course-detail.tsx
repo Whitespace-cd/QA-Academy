@@ -14,7 +14,7 @@ export default function CourseDetail() {
   const { data: course, isLoading, refetch } = useGetCourse(courseId);
   const enrollMutation = useEnrollCourse({
     mutation: {
-      onSuccess: () => {const firstLessonId = course.modules?.[0]?.id || 1;
+      onSuccess: () => {const firstLessonId = (course.modules?.[0] as any)?.firstLessonId || course.modules?.[0]?.id || 1;
         toast.success('Successfully enrolled!');
         refetch();
       },
@@ -108,10 +108,10 @@ export default function CourseDetail() {
                     </div>
                   </div>
                   {course.isEnrolled && (
-                    <Link href={`/modules/${module.id}/lessons`}>
-                      <Button variant="outline" size="sm">Start</Button>
-                    </Link>
-                  )}
+                  <Link href={`/lessons/${(module as any).firstLessonId || module.id}`}>
+                    <Button variant="outline" size="sm">Start</Button>
+                  </Link>
+                )}
                 </div>
               </CardContent>
             </Card>
