@@ -299,7 +299,10 @@ export async function customFetch<T = unknown>(
     throw new TypeError(`customFetch: ${method} requests cannot have a body.`);
   }
 
-  const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("qa_token") : null;
+  const authHeaders: HeadersInit = token ? { Authorization: `Bearer ${token}` } : {};
+  const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, authHeaders, headersInit);
+
 
   if (
     typeof init.body === "string" &&
