@@ -271,10 +271,26 @@ async function parseSuccessBody(
   }
 }
 
+// Support external API URL for deployments (e.g. Vercel frontend + Railway backend)
+const VITE_API_URL = typeof import.meta !== "undefined"
+  ? (import.meta as any).env?.VITE_API_URL ?? ""
+  : "";
+
+function resolveApiUrl(input: RequestInfo | URL): RequestInfo | URL {
+  if (!VITE_API_URL) return input;
+  const url = resolveUrl(input);
+  // Only prepend for relative /api/* paths
+  if (url.startsWith("/api")) {
+    return `${VITE_API_URL.replace(/\/$/, "")}${url}`;
+  }
+  return input;
+}
+
 export async function customFetch<T = unknown>(
   input: RequestInfo | URL,
   options: CustomFetchOptions = {},
 ): Promise<T> {
+  input = resolveApiUrl(input);
   const { responseType = "auto", headers: headersInit, ...init } = options;
 
   const method = resolveMethod(input, init.method);

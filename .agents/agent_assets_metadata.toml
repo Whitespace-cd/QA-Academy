@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "IGpH7jXGiUftszSIor23c"
+uri = "file://DEPLOY.md"
+type = "text"
+title = "Deployment Guide (Vercel + Railway + Neon)"
